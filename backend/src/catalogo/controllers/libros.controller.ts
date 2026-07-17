@@ -15,6 +15,8 @@ import { LibrosService } from '../services/libros.service';
 import { CreateLibroDto } from '../dto/create-libro.dto';
 import { UpdateLibroDto } from '../dto/update-libro.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { PermisosGuard } from '../../common/guards/permisos.guard';
+import { RequierePermiso } from '../../common/decorators/requiere-permiso.decorator';
 
 @ApiTags('libros')
 @Controller('libros')
@@ -80,7 +82,8 @@ export class LibrosController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermisosGuard)
+  @RequierePermiso('Gestionar_Libros')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new book with its authors and keywords (requires JWT)' })
   create(@Body() createLibroDto: CreateLibroDto) {
@@ -88,7 +91,8 @@ export class LibrosController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermisosGuard)
+  @RequierePermiso('Gestionar_Libros')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update general information of a book (requires JWT)' })
   update(
@@ -99,7 +103,8 @@ export class LibrosController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermisosGuard)
+  @RequierePermiso('Gestionar_Libros')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a book and its copies if no active loans exist (requires JWT)' })
   remove(@Param('id', ParseIntPipe) id: number) {

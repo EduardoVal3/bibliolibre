@@ -1,13 +1,22 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { validateEnv } from './config/env.config';
 import { HealthController } from './health/health.controller';
 import { CatalogoModule } from './catalogo/catalogo.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
+import { PrestamosModule } from './prestamos/prestamos.module';
+import { VentasModule } from './ventas/ventas.module';
+import { ProveedoresModule } from './proveedores/proveedores.module';
+import { RecursosDigitalesModule } from './recursos-digitales/recursos-digitales.module';
+import { EventosModule } from './eventos/eventos.module';
 import { join } from 'path';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
@@ -29,8 +38,16 @@ import { join } from 'path';
       }),
     }),
     CatalogoModule,
+    UsuariosModule,
+    PrestamosModule,
+    VentasModule,
+    ProveedoresModule,
+    RecursosDigitalesModule,
+    EventosModule,
   ],
   controllers: [HealthController],
-  providers: [],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

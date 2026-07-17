@@ -25,7 +25,7 @@ Elegí la interpretación más común para este tipo de proyecto agentic. Si alg
 3. **La BD ya existe.** Nunca se usa `synchronize: true`. Se trabaja con migraciones: una migración "baseline" que documenta el esquema actual (marcada como ya aplicada si tu BD ya tiene datos reales) y luego una migración por módulo que agrega vistas/funciones/procedimientos/triggers nuevos.
 4. **Autenticación:** solo `usuarios` tiene credenciales (`passwordhash`). `empleados` no inicia sesión por sí mismo — un empleado que necesite acceso al sistema debe tener **también** un registro en `usuarios` con el mismo `idpersona`. El JWT resuelve en el login si la persona es además empleado, y si lo es, incluye sus permisos.
 5. **Vacío detectado en el esquema:** `devoluciones` no referencia `prestamos`/`detalles_prestamo`, solo `idedicionvolumen`. Si un mismo ejemplar se prestó varias veces en su historia, hay ambigüedad sobre a cuál préstamo corresponde una devolución. En la Iteración 5 propongo un parche opcional (`alter table devoluciones add column iddetalleprestamo ...`) y una alternativa "best effort" si prefieres no tocar el esquema.
-6. **`dispositivos_prestados`** no tiene tabla de historial (a diferencia de `edicion_volumen` + `prestamos`), solo el campo `estado`. Sin una tabla adicional no se puede saber qué usuario tiene cada dispositivo. Se documenta como limitación conocida en la Iteración 11.
+6. ~~**`dispositivos_prestados`** no tiene tabla de historial (a diferencia de `edicion_volumen` + `prestamos`), solo el campo `estado`. Sin una tabla adicional no se puede saber qué usuario tiene cada dispositivo. Se documenta como limitación conocida en la Iteración 11.~~ **Resuelto en Iteración 11:** se creó `prestamos_dispositivos` que registra quién, cuándo y estado de cada préstamo de dispositivo.
 
 ---
 
@@ -586,9 +586,9 @@ group by pr.idpresupuesto;
 
 **Entidades:** `RecursoDigital, DescargaAcceso, DispositivoPrestado` (líneas 322-351).
 
-**Limitación conocida:** `dispositivos_prestados` solo tiene el campo `estado` (sin historial de quién lo tiene ni fecha esperada de devolución). El endpoint de dispositivos solo permite alternar `estado`; si más adelante quieres trazabilidad completa, se necesitaría una tabla nueva `prestamos_dispositivos` análoga a `detalles_prestamo`, fuera de alcance de esta iteración salvo que lo pidas explícitamente.
+**Limitación resuelta:** se creó la tabla `prestamos_dispositivos` (análoga a `detalles_prestamo`) con `iddispositivo`, `idusuario`, `fechaprestamo`, `fechalimitedevolucion` y `fechadevolucion`. Disparadores `trg_marcar_dispositivo_prestado` y `trg_marcar_dispositivo_devuelto` sincronizan automáticamente `dispositivos_prestados.estado` a `'Prestado'`/`'Disponible'`. Nuevos endpoints: `POST /dispositivos/:id/prestar`, `POST /dispositivos/:id/devolver`, `GET /dispositivos/:id/prestamos`.
 
-**Objetos de base de datos:**
+**Objetos de base de datos (migración `recursos-digitales-db-objects`):**
 
 ```sql
 create or replace view vw_recursos_mas_descargados as
@@ -608,7 +608,10 @@ order by total_descargas desc;
 | GET/POST/PUT/DELETE | `/recursos-digitales`                 | CRUD                                                                                              |
 | POST                | `/recursos-digitales/:id/acceso`      | registra descarga/visualización (validar `fn_membresia_activa` si el tipo de recurso lo requiere) |
 | GET                 | `/recursos-digitales/mas-descargados` | `vw_recursos_mas_descargados`                                                                     |
-| GET/PATCH           | `/dispositivos`                       | listar y cambiar `estado`                                                                         |
+| GET/POST/PATCH      | `/dispositivos`                       | CRUD de dispositivos                                                                              |
+| POST                | `/dispositivos/:id/prestar`           | prestar dispositivo a un usuario (crea registro en `prestamos_dispositivos`)                      |
+| POST                | `/dispositivos/:id/devolver`          | devolver dispositivo (marca `fechadevolucion`, actualiza `estado`)                                |
+| GET                 | `/dispositivos/:id/prestamos`         | historial de préstamos del dispositivo                                                            |
 
 ---
 

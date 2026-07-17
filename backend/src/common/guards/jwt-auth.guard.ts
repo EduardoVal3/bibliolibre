@@ -1,12 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    // ponytail: Bypass authentication check for now until Iteration 3 AuthModule is fully implemented.
-    return true;
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  handleRequest<TUser = any>(err: any, user: TUser, _info: any, _context: ExecutionContext): TUser {
+    if (err || !user) {
+      throw err || new UnauthorizedException();
+    }
+    return user;
   }
 }
