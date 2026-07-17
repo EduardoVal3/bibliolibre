@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { DisponibilidadBadge } from '@/components/catalogo/DisponibilidadBadge';
+import { ReservaButton } from '@/components/prestamos/ReservaButton';
 import { ArrowLeft, Loader2, Plus, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -259,9 +260,12 @@ export default function LibroDetailPage() {
                         : 'No asignada'}
                     </td>
                     <td className="p-4 text-right">
-                      <Button variant="outline" size="sm" onClick={() => handleEditCopyClick(ejemplar)} className="cursor-pointer">
-                        Cambiar Estado
-                      </Button>
+                      <div className="flex justify-end gap-1.5">
+                        <ReservaButton idEdicionVolumen={ejemplar.idEdicionVolumen} disabled={ejemplar.disponibilidad !== 'Disponible'} />
+                        <Button variant="outline" size="sm" onClick={() => handleEditCopyClick(ejemplar)} className="cursor-pointer">
+                          Cambiar Estado
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
