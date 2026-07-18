@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { DisponibilidadBadge } from '@/components/catalogo/DisponibilidadBadge';
-import { ReservaButton } from '@/components/prestamos/ReservaButton';
+import { ReservaButton } from '@/components/catalogo/ReservaButton';
 import { ArrowLeft, Loader2, Plus, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -89,7 +89,7 @@ export default function LibroDetailPage() {
       <div className="max-w-2xl mx-auto p-6 text-center space-y-4">
         <h2 className="text-xl font-semibold text-rose-500">Error al cargar libro</h2>
         <p className="text-zinc-500">El libro solicitado no existe o no se pudo cargar.</p>
-        <Link href="/catalogo">
+        <Link href="/catalogo-admin">
           <Button variant="outline">Regresar al catálogo</Button>
         </Link>
       </div>
@@ -131,7 +131,7 @@ export default function LibroDetailPage() {
 
   return (
     <div className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-6 space-y-6">
-      <Link href="/catalogo" className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors text-sm font-medium">
+              <Link href="/catalogo-admin" className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors text-sm font-medium">
         <ArrowLeft className="w-4 h-4" />
         Regresar al catálogo
       </Link>

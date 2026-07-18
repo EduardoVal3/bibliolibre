@@ -24,7 +24,11 @@ export function LoginForm() {
       const res = await usuariosApi.auth.login({ correo, password });
       setTokens(res);
       toast.success('Inicio de sesión exitoso');
-      router.push('/catalogo');
+      if (res.usuario.tipo === 'empleado') {
+        router.push('/catalogo-admin');
+      } else {
+        router.push('/catalogo');
+      }
     } catch (err: any) {
       toast.error(err.message || 'Credenciales inválidas');
     } finally {

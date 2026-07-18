@@ -4,6 +4,8 @@ Sistema completo de gestión bibliotecaria con backend NestJS + TypeORM + Postgr
 
 ## Stack
 
+> **⚠️ ADVERTENCIA:** Los precios de membresías en este sistema están en **USD**, no en Lempiras (HNL). PayPal no soporta HNL. Ver sección PayPal.
+
 | Capa      | Tecnologías                                                    |
 |-----------|----------------------------------------------------------------|
 | Backend   | NestJS, TypeORM, PostgreSQL, JWT, Swagger, class-validator     |
@@ -74,15 +76,19 @@ cp frontend/.env.example frontend/.env
 
 Editar `backend/.env` con los valores correctos:
 
-| Variable          | Default                  |
-|-------------------|--------------------------|
-| PORT              | 3000                     |
-| DATABASE_HOST     | localhost                |
-| DATABASE_PORT     | 5432                     |
-| DATABASE_USER     | postgres                 |
-| DATABASE_PASSWORD | postgres                 |
-| DATABASE_DB       | biblioteca               |
-| JWT_SECRET        | super-secret-key-...     |
+| Variable              | Default                  |
+|-----------------------|--------------------------|
+| PORT                  | 3000                     |
+| DATABASE_HOST         | localhost                |
+| DATABASE_PORT         | 5432                     |
+| DATABASE_USER         | postgres                 |
+| DATABASE_PASSWORD     | postgres                 |
+| DATABASE_DB           | biblioteca               |
+| JWT_SECRET            | super-secret-key-...     |
+| PAYPAL_CLIENT_ID      | (sandbox credentials)    |
+| PAYPAL_CLIENT_SECRET  | (sandbox credentials)    |
+| PAYPAL_ENV            | sandbox                  |
+| PAYPAL_WEBHOOK_ID     | (opcional, live)         |
 
 ### 4. Iniciar
 
@@ -99,6 +105,73 @@ pnpm dev
 - API: http://localhost:3000/api
 - Swagger docs: http://localhost:3000/api/docs
 - Frontend: http://localhost:3001
+
+## PayPal — Membresías
+
+Los pagos de membresías se procesan vía **PayPal**. Los precios están en **USD**.
+
+| Variable              | Descripción                                      |
+|-----------------------|--------------------------------------------------|
+| `PAYPAL_CLIENT_ID`    | Client ID de la app PayPal (sandbox o live)      |
+| `PAYPAL_CLIENT_SECRET`| Secret de la app PayPal                          |
+| `PAYPAL_ENV`          | `sandbox` (default) o `live`                     |
+| `PAYPAL_WEBHOOK_ID`   | ID del webhook en PayPal (requerido en live)     |
+
+### Jerarquía de membresías
+
+Cada plan tiene un `nivel` numérico. Solo se permite **upgrade** (nivel mayor).
+No hay downgrade ni cancelación en esta fase.
+
+| Membresía     | Nivel | Costo USD |
+|---------------|-------|-----------|
+| Gratuita      | 0     | $0.00     |
+| Premium       | 1     | $13.00    |
+| Institucional | 2     | $45.00    |
+
+### Endpoints de pago
+
+| Método | Ruta                                         | Descripción                           |
+|--------|----------------------------------------------|----------------------------------------|
+| GET    | `/api/membresias/disponibles`                | Planes con nivel > membresía actual    |
+| POST   | `/api/pagos-membresias/orden`                | Crear orden PayPal                     |
+| POST   | `/api/pagos-membresias/:id/capturar`         | Capturar orden tras aprobación cliente |
+| POST   | `/api/pagos-membresias/webhook`              | Webhook de confirmación PayPal         |
+
+---
+
+## Contraseñas temporales de empleados
+
+Los empleados existentes sin `passwordhash` recibieron una contraseña aleatoria
+durante la migración `empleados-auth`, volcada **una sola vez** a:
+
+```
+backend/tmp/empleados-passwords-temporales.csv
+```
+
+Este archivo está en `.gitignore`. El administrador debe distribuir esas
+contraseñas fuera de banda. Al primer inicio de sesión, el backend devuelve
+`requiereCambioPassword: true` y el frontend fuerza el cambio de contraseña.
+
+---
+
+## JWT — Payload por tipo de usuario
+
+### Cliente (`tipo: "usuario"`)
+```json
+{ "sub": 10, "tipo": "usuario", "idPersona": 14,
+  "idTipoUsuario": 1, "correo": "cliente@mail.com" }
+```
+
+### Empleado (`tipo: "empleado"`)
+```json
+{ "sub": 5, "tipo": "empleado", "idPersona": 20, "idRol": 2,
+  "permisos": ["Crear_Libro", "Registrar_Venta"],
+  "correo": "emp@mail.com", "requiereCambioPassword": false }
+```
+
+El claim `tipo` es el discriminador usado por `proxy.ts` para clasificar rutas.
+
+---
 
 ## Tests
 

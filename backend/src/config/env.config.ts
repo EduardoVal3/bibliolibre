@@ -9,6 +9,10 @@ export const envSchema = z.object({
   DATABASE_DB: z.string(),
   JWT_SECRET: z.string(),
   JWT_EXPIRES_IN: z.string().default('1d'),
+  PAYPAL_CLIENT_ID: z.string().optional(),
+  PAYPAL_CLIENT_SECRET: z.string().optional(),
+  PAYPAL_ENV: z.enum(['sandbox', 'live']).default('sandbox'),
+  PAYPAL_WEBHOOK_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

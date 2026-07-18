@@ -17,7 +17,7 @@ export default function NuevoLibroPage() {
     onSuccess: () => {
       toast.success('Libro registrado con éxito');
       queryClient.invalidateQueries({ queryKey: ['libros'] });
-      router.push('/catalogo');
+      router.push('/catalogo-admin');
     },
     onError: (err: any) => {
       toast.error(err.message || 'Error al registrar el libro');
@@ -26,7 +26,7 @@ export default function NuevoLibroPage() {
 
   return (
     <div className="flex-1 w-full max-w-3xl mx-auto p-4 md:p-6 space-y-6">
-      <Link href="/catalogo" className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors text-sm font-medium">
+      <Link href="/catalogo-admin" className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors text-sm font-medium">
         <ArrowLeft className="w-4 h-4" />
         Regresar al catálogo
       </Link>

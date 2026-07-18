@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Users,
-  CreditCard,
   Menu,
   X,
   LayoutDashboard,
@@ -24,7 +23,6 @@ import {
   DollarSign,
   FileText,
   Monitor,
-  Download,
   PartyPopper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,9 +32,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/catalogo-admin", label: "Catálogo", icon: BookOpen },
   { href: "/prestamos", label: "Préstamos", icon: Hand },
-  { href: "/mis-prestamos", label: "Mis Préstamos", icon: BookCopy },
   { href: "/reservas", label: "Reservas", icon: Bookmark },
-  { href: "/mis-reservas", label: "Mis Reservas", icon: Bookmark },
   { href: "/ventas", label: "Ventas", icon: Store },
   { href: "/empleados", label: "Empleados", icon: UserCheck },
   { href: "/roles-empleado", label: "Roles y Permisos", icon: Shield },
@@ -44,13 +40,11 @@ const navItems = [
   { href: "/usuarios", label: "Usuarios", icon: Users },
   { href: "/biblioteca-digital", label: "Biblioteca Digital", icon: Monitor },
   { href: "/dispositivos", label: "Dispositivos", icon: Globe },
-  { href: "/mis-descargas", label: "Mis Descargas", icon: Download },
   { href: "/proveedores", label: "Proveedores", icon: Truck },
   { href: "/presupuestos", label: "Presupuestos", icon: DollarSign },
   { href: "/eventos", label: "Eventos", icon: PartyPopper },
   { href: "/ordenes-compra", label: "Órdenes Compra", icon: FileText },
-  { href: "/membresias", label: "Membresías", icon: CreditCard },
-  { href: "/perfil", label: "Mi Perfil", icon: LayoutDashboard },
+
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {

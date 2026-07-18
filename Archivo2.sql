@@ -908,11 +908,11 @@ insert into membresias (
            0.00,
            12 ),( 'Premium',
                   'Mayor cantidad de préstamos y acceso digital.',
-                  350.00,
+                  13.00,
                   12 ),( 'Institucional',
-                         'Membresía para universidades e instituciones.',
-                         1200.00,
-                         12 );
+                          'Membresía para universidades e instituciones.',
+                          45.00,
+                          12 );
 
 -- ============================================================
 -- HISTORIAL_MEMBRESIAS

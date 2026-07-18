@@ -16,4 +16,7 @@ export class Membresia {
 
   @Column({ name: 'duracionmeses', nullable: true })
   duracionMeses: number;
+
+  @Column({ name: 'nivel', type: 'int', default: 0 })
+  nivel: number;
 }

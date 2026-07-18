@@ -21,7 +21,7 @@ El **Supuesto 4** de `roadmap-sistema-biblioteca.md` decía:
 ## 2. Decisiones de esta fase (documentadas según lo pedido)
 
 **a) Invalidación de refresh tokens — se elige la estrategia de tabla con revocación (no el contador de versión).**
-Motivo: un contador de versión invalida *todas* las sesiones de la persona al hacer logout en una sola; con una tabla se revoca solo la sesión actual, y queda naturalmente disponible para el futuro "cerrar sesión en todos los dispositivos", listar sesiones activas o auditar accesos. El costo extra (una tabla, una consulta en `/auth/refresh`) es marginal frente a esa granularidad. Detalle en Iteración 17.
+Motivo: un contador de versión invalida _todas_ las sesiones de la persona al hacer logout en una sola; con una tabla se revoca solo la sesión actual, y queda naturalmente disponible para el futuro "cerrar sesión en todos los dispositivos", listar sesiones activas o auditar accesos. El costo extra (una tabla, una consulta en `/auth/refresh`) es marginal frente a esa granularidad. Detalle en Iteración 17.
 
 **b) Contraseña para empleados ya sembrados sin `passwordhash`.**
 La migración de la Iteración 16 genera, para cada empleado existente, una contraseña aleatoria (no un patrón adivinable como "cambiar123"), la hashea, y marca `requierecambiopassword = true`. Las contraseñas en claro se escriben **una sola vez** a un archivo fuera de control de versiones (`backend/tmp/empleados-passwords-temporales.csv`, agregado a `.gitignore`) para que un administrador las distribuya fuera de banda. El login de un empleado con esa bandera en `true` funciona, pero el backend devuelve `requiereCambioPassword: true` y el frontend fuerza el cambio antes de continuar. Empleados nuevos (creados desde ahora) siempre traen password propio desde el alta.
@@ -61,6 +61,7 @@ alter table empleados add column requierecambiopassword boolean not null default
 **`EmpleadosService`:** `crear()`/`actualizar()` aceptan `password` en el DTO, la hashean antes de persistir. El mapeo de salida **nunca** incluye `passwordhash` (`@Exclude()` en la entidad o DTO de respuesta explícito).
 
 **`AuthService.login(correo, password)`:**
+
 1. Buscar `persona` por `correo`.
 2. Si existe fila en `usuarios` con ese `idpersona` → validar hash ahí, `tipo: "usuario"`.
 3. Si no, buscar en `empleados` con ese `idpersona` → validar hash ahí, `tipo: "empleado"`.
@@ -73,15 +74,14 @@ alter table empleados add column requierecambiopassword boolean not null default
 
 **Nuevo endpoint** `POST /auth/cambiar-password` (autenticado): password actual + nueva, actualiza hash, `requierecambiopassword = false`.
 
-| Método | Ruta | Cambio |
-|---|---|---|
-| POST | `/auth/login` | resuelve usuario o empleado; nuevo payload con `tipo` |
-| POST | `/auth/cambiar-password` | nuevo |
-| POST | `/empleados` | ahora exige `password` |
-| PATCH | `/empleados/:id` | acepta `password` opcional |
+| Método | Ruta                     | Cambio                                                |
+| ------ | ------------------------ | ----------------------------------------------------- |
+| POST   | `/auth/login`            | resuelve usuario o empleado; nuevo payload con `tipo` |
+| POST   | `/auth/cambiar-password` | nuevo                                                 |
+| POST   | `/empleados`             | ahora exige `password`                                |
+| PATCH  | `/empleados/:id`         | acepta `password` opcional                            |
 
 **Qué NO hacer:** no tocar `/auth/refresh` ni `/auth/logout` todavía (Iteración 17); no tocar el frontend.
-
 
 ---
 
@@ -119,13 +119,12 @@ Se guarda el **hash** del refresh token (sha256), nunca el token en claro.
 
 **Fuera de alcance, anotado como extensión futura:** `POST /auth/logout-todos` (revocar todas las sesiones de la persona); job de limpieza de filas vencidas.
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | `/auth/logout` | revoca el refresh token de la sesión actual |
-| POST | `/auth/refresh` | valida contra la tabla y rota el token |
+| Método | Ruta            | Descripción                                 |
+| ------ | --------------- | ------------------------------------------- |
+| POST   | `/auth/logout`  | revoca el refresh token de la sesión actual |
+| POST   | `/auth/refresh` | valida contra la tabla y rota el token      |
 
 **Qué NO hacer:** no construir "cerrar sesión en todos los dispositivos" todavía; no tocar el frontend.
-
 
 ---
 
@@ -134,6 +133,7 @@ Se guarda el **hash** del refresh token (sha256), nunca el token en claro.
 **Contexto previo:** Iteraciones 16-17 (JWT con `tipo` disponible).
 
 **Alcance:**
+
 - `globals.css`: completar tokens de shadcn (`--background`, `--primary`, `--sidebar-*`, radios, tipografía) como único punto de identidad visual. Ningún componente de esta fase usa color hardcodeado (`bg-blue-600`, etc.) — todo vía clases que resuelven a variables o `var(--...)`.
 - `(public)/layout.tsx` único: envuelve landing, login, registro, catálogo y catálogo digital.
 - Navbar simple (logo + botón que alterna "Iniciar sesión"/"Cerrar sesión" según el estado de sesión leído en cliente).
@@ -144,7 +144,6 @@ Se guarda el **hash** del refresh token (sha256), nunca el token en claro.
 
 **Qué NO hacer:** no tocar `(dashboard)/layout.tsx`; no mover páginas todavía (Iteraciones 20 y 22); no construir en detalle las páginas de catálogo/membresías/perfil, solo el shell (usar rutas placeholder si hace falta para probar el sidebar).
 
-
 ---
 
 ## Iteración 19 — Frontend: Middleware de autenticación con clasificación de rutas
@@ -153,17 +152,16 @@ Se guarda el **hash** del refresh token (sha256), nunca el token en claro.
 
 **Alcance:** reescribir `middleware.ts` reemplazando la lógica actual ("todo bloqueado salvo login/registro" + redirect de `/` al dashboard):
 
-| Categoría | Rutas | Regla |
-|---|---|---|
-| Pública sin restricción | `/`, `/login`, `/registro` | sin JWT; si ya hay sesión, `/login`/`/registro` redirigen a `/` |
-| Pública con lectura anónima | `/catalogo`, `/catalogo/[id]`, `/catalogo/digitales` | sin JWT para listar/ver; las acciones se gatean dentro de la página |
-| Cliente autenticado (`tipo: "usuario"`) | `/perfil`, `/mis-prestamos`, `/mis-reservas`, `/mis-descargas`, `/membresias` | requiere JWT válido con `tipo: "usuario"` |
-| Empleado — dashboard (`tipo: "empleado"`) | `/(dashboard)/**` (incluye `/catalogo-admin`) | requiere JWT válido con `tipo: "empleado"`; si un cliente entra, redirigir a `/` |
+| Categoría                                 | Rutas                                                                         | Regla                                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Pública sin restricción                   | `/`, `/login`, `/registro`                                                    | sin JWT; si ya hay sesión, `/login`/`/registro` redirigen a `/`                  |
+| Pública con lectura anónima               | `/catalogo`, `/catalogo/[id]`, `/catalogo/digitales`                          | sin JWT para listar/ver; las acciones se gatean dentro de la página              |
+| Cliente autenticado (`tipo: "usuario"`)   | `/perfil`, `/mis-prestamos`, `/mis-reservas`, `/mis-descargas`, `/membresias` | requiere JWT válido con `tipo: "usuario"`                                        |
+| Empleado — dashboard (`tipo: "empleado"`) | `/(dashboard)/**` (incluye `/catalogo-admin`)                                 | requiere JWT válido con `tipo: "empleado"`; si un cliente entra, redirigir a `/` |
 
 Nota: agregué `/membresias` a la fila de cliente autenticado — no estaba en la tabla del prompt original pero se deduce de la Iteración 23/24 (pago de membresías es exclusivo de cliente). Ajusta la ruta si prefieres otro nombre.
 
 **Qué NO hacer:** no dejar el redirect viejo de `/` al dashboard; no dejar rutas de empleado accesibles a clientes "por si acaso".
-
 
 ---
 
@@ -172,12 +170,12 @@ Nota: agregué `/membresias` a la fila de cliente autenticado — no estaba en l
 **Contexto previo:** Iteraciones 18-19.
 
 **Alcance:**
+
 - Mover `(dashboard)/catalogo` → `(dashboard)/catalogo-admin` (`/catalogo-admin`, `/catalogo-admin/nuevo`, `/catalogo-admin/editar/[id]`): mover carpeta + actualizar enlaces/breadcrumbs/sidebar del dashboard. Sin cambios de lógica interna.
 - Crear `(public)/catalogo`: listado + detalle de solo lectura, reutilizando `GET /libros`, `GET /libros/catalogo-completo`, `GET /libros/:id` (sin backend nuevo).
 - Mover `ReservaButton` a `components/catalogo/` (compartido) y reutilizarlo en la vista pública. Sin sesión al presionarlo, dispara el flujo de login (conservar la intención, ej. `?next=/catalogo/12`, para retomarla tras autenticarse).
 
 **Qué NO hacer:** no tocar endpoints del Módulo 1; no incluir botones de alta/edición en la vista pública.
-
 
 ---
 
@@ -189,7 +187,6 @@ Nota: agregué `/membresias` a la fila de cliente autenticado — no estaba en l
 
 **Qué NO hacer:** no tocar `/dispositivos`; no construir controles administrativos aquí (siguen en `(dashboard)/recursos-digitales`).
 
-
 ---
 
 ## Iteración 22 — Frontend: Reubicación de páginas de cliente
@@ -199,7 +196,6 @@ Nota: agregué `/membresias` a la fila de cliente autenticado — no estaba en l
 **Alcance:** mover `perfil`, `mis-prestamos`, `mis-reservas`, `mis-descargas` de `(dashboard)/*` a `(public)/*`. Actualizar enlaces del sidebar de cliente y eliminar referencias residuales en el dashboard de empleados. Es un mover de carpeta + ajuste de imports, no una reescritura de lógica.
 
 **Qué NO hacer:** no reescribir la lógica interna de esas páginas.
-
 
 ---
 
@@ -247,20 +243,20 @@ $$;
 ```
 
 **`MembresiasPagoService`:**
+
 - `crearOrden(idusuario, idmembresiaDestino)`: valida `nivel` destino > `nivel` de la membresía activa (409 si no); crea orden en PayPal (`POST /v2/checkout/orders`) por el `costo` de la membresía destino; persiste fila en `pagos_membresias` en `Pendiente` con el `idordenexterna` de PayPal.
 - `capturarOrden(idordenexterna)`: llama a PayPal (`POST /v2/checkout/orders/{id}/capture`); si confirma, marca `Completado` y ejecuta `sp_actualizar_membresia_pagada`.
 - Webhook `POST /pagos-membresias/webhook`: valida la firma de PayPal; si el evento confirma la captura y la fila sigue `Pendiente`, la confirma igual que `capturarOrden` — es la fuente de verdad ante fallos del lado cliente, no reemplazable por la confirmación del navegador.
 - Credenciales (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV=sandbox|live`) vía `ConfigModule`, validadas igual que el resto de env vars desde la Iteración 0 del roadmap original.
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/membresias/disponibles` | membresías con `nivel` mayor a la del usuario autenticado |
-| POST | `/pagos-membresias/orden` | crea orden en PayPal, valida jerarquía |
-| POST | `/pagos-membresias/:idordenexterna/capturar` | confirma pago desde el cliente |
-| POST | `/pagos-membresias/webhook` | confirmación asíncrona (autenticado por firma, no por JWT de usuario) |
+| Método | Ruta                                         | Descripción                                                           |
+| ------ | -------------------------------------------- | --------------------------------------------------------------------- |
+| GET    | `/membresias/disponibles`                    | membresías con `nivel` mayor a la del usuario autenticado             |
+| POST   | `/pagos-membresias/orden`                    | crea orden en PayPal, valida jerarquía                                |
+| POST   | `/pagos-membresias/:idordenexterna/capturar` | confirma pago desde el cliente                                        |
+| POST   | `/pagos-membresias/webhook`                  | confirmación asíncrona (autenticado por firma, no por JWT de usuario) |
 
 **Qué NO hacer:** no construir downgrade ni cancelación (si algo parece trivial de incluir, anótalo como fuera de alcance en vez de construirlo); no confiar únicamente en la confirmación del lado cliente sin el webhook.
-
 
 ---
 
@@ -271,7 +267,6 @@ $$;
 **Alcance:** `/membresias` — plan actual (nombre, costo, vigencia) + tarjetas de planes con `nivel` mayor (con botón "Mejorar a [plan]"); planes de igual o menor nivel sin botón. Botones oficiales del SDK de JS de PayPal; tras aprobación, llama a capturar y refresca el plan mostrado.
 
 **Qué NO hacer:** no mostrar botón de compra en planes de igual o menor nivel (la validación real ya vive en el backend, esta es solo la UI coherente con ella).
-
 
 ---
 

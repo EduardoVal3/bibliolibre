@@ -6,18 +6,17 @@ import { FiltrosCatalogo } from '@/components/catalogo/FiltrosCatalogo';
 import { LibroCard } from '@/components/catalogo/LibroCard';
 import { LibroTable } from '@/components/catalogo/LibroTable';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Grid, List } from 'lucide-react';
+import { Loader2, Grid, List } from 'lucide-react';
 import { useState } from 'react';
-import Link from 'next/link';
 import { VwCatalogoLibro } from '@/types/catalogo.types';
 
-export default function CatalogoPage() {
+export default function CatalogoPublicPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<any>({});
 
   const { data, isLoading } = useQuery({
-    queryKey: ['libros', { page, ...filters }],
+    queryKey: ['libros', 'public', { page, ...filters }],
     queryFn: () =>
       catalogoApi.getLibros({
         page,
@@ -51,36 +50,28 @@ export default function CatalogoPage() {
     <div className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 space-y-6">
       <div className="flex justify-between items-center gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Catálogo de Libros</h1>
-          <p className="text-zinc-500 text-sm">Gestiona el inventario y consulta disponibilidad de libros</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Catálogo de Libros</h1>
+          <p className="text-muted-foreground text-sm">Explora nuestro catálogo y reserva tus libros favoritos</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5 flex bg-white dark:bg-zinc-900 shadow-sm">
-            <Button
-              size="sm"
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              className="h-8 px-3 gap-1.5 cursor-pointer"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid className="w-4 h-4" />
-              <span>Tarjeta</span>
-            </Button>
-            <Button
-              size="sm"
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              className="h-8 px-3 gap-1.5 cursor-pointer"
-              onClick={() => setViewMode('table')}
-            >
-              <List className="w-4 h-4" />
-              <span>Tabla</span>
-            </Button>
-          </div>
-          <Link href="/catalogo-admin/nuevo" passHref>
-            <Button className="h-9 px-4 gap-1.5 bg-indigo-655 hover:bg-indigo-700 text-white font-medium shadow-sm cursor-pointer border-0">
-              <Plus className="w-4 h-4" />
-              <span>Nuevo Libro</span>
-            </Button>
-          </Link>
+        <div className="border border-border rounded-lg p-0.5 flex bg-background shadow-sm">
+          <Button
+            size="sm"
+            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+            className="h-8 px-3 gap-1.5 cursor-pointer"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid className="w-4 h-4" />
+            <span>Tarjeta</span>
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            className="h-8 px-3 gap-1.5 cursor-pointer"
+            onClick={() => setViewMode('table')}
+          >
+            <List className="w-4 h-4" />
+            <span>Tabla</span>
+          </Button>
         </div>
       </div>
 
@@ -88,11 +79,11 @@ export default function CatalogoPage() {
 
       {isLoading ? (
         <div className="flex justify-center items-center py-24">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : viewMode === 'grid' ? (
         mappedLibros.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 text-zinc-400">
+          <div className="text-center py-16 bg-card border border-border rounded-2xl p-6 text-muted-foreground">
             No se encontraron libros con los filtros seleccionados.
           </div>
         ) : (
@@ -117,7 +108,7 @@ export default function CatalogoPage() {
           >
             Anterior
           </Button>
-          <span className="text-xs text-zinc-500 font-medium">
+          <span className="text-xs text-muted-foreground font-medium">
             Página {page} de {totalPages}
           </span>
           <Button

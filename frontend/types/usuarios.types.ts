@@ -8,8 +8,9 @@ export interface LoginResponse {
   refreshToken: string;
   usuario: {
     sub: number;
+    tipo: 'usuario' | 'empleado';
     idPersona: number;
-    idTipoUsuario: number;
+    idTipoUsuario?: number;
     correo: string;
     idRol?: number;
     permisos?: string[];
@@ -73,6 +74,7 @@ export interface Membresia {
   descripcion?: string;
   costo?: string;
   duracionMeses?: number;
+  nivel?: number;
 }
 
 export interface HistorialMembresia {
@@ -82,6 +84,12 @@ export interface HistorialMembresia {
   fechaInicio: string;
   fechaFin?: string;
   membresia?: Membresia;
+}
+
+export interface CrearOrdenResponse {
+  id: string;
+  status: string;
+  links?: { href: string; rel: string; method: string }[];
 }
 
 export interface PaginatedResponse<T> {

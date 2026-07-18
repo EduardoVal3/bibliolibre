@@ -9,6 +9,7 @@ import type {
   TipoUsuario,
   HistorialMembresia,
   PaginatedResponse,
+  CrearOrdenResponse,
 } from '@/types/usuarios.types';
 
 export const usuariosApi = {
@@ -61,6 +62,17 @@ export const usuariosApi = {
     },
     delete(id: number) {
       return apiClient.delete<{ message: string }>(`/membresias/${id}`);
+    },
+  },
+  pagos: {
+    getDisponibles() {
+      return apiClient.get<Membresia[]>('/membresias/disponibles');
+    },
+    crearOrden(idMembresia: number) {
+      return apiClient.post<CrearOrdenResponse>('/pagos-membresias/orden', { idMembresia });
+    },
+    capturarOrden(idOrdenExterna: string) {
+      return apiClient.post<{ status: string; id: string }>(`/pagos-membresias/${idOrdenExterna}/capturar`);
     },
   },
   tiposUsuario: {

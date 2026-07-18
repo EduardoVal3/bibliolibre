@@ -21,4 +21,9 @@ export class CreateMembresiaDto {
   @IsInt()
   @IsOptional()
   duracionMeses?: number;
+
+  @ApiProperty({ example: 1, required: false })
+  @IsInt()
+  @IsOptional()
+  nivel?: number;
 }
