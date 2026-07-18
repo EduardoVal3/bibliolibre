@@ -14,6 +14,9 @@ export class PermisosGuard implements CanActivate {
     if (!requiredPermiso) return true;
 
     const { user } = context.switchToHttp().getRequest();
+    if (!user || user.tipo !== 'empleado') {
+      throw new ForbiddenException('Access denied: only employees can access this resource');
+    }
     if (!user?.permisos || !Array.isArray(user.permisos)) {
       throw new ForbiddenException('Access denied: no permissions found');
     }

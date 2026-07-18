@@ -8,6 +8,8 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EmpleadosService } from '../services/empleados.service';
@@ -19,6 +21,7 @@ import { RequierePermiso } from '../../common/decorators/requiere-permiso.decora
 
 @ApiTags('empleados')
 @Controller('empleados')
+@UseInterceptors(ClassSerializerInterceptor)
 export class EmpleadosController {
   constructor(private readonly service: EmpleadosService) {}
 
