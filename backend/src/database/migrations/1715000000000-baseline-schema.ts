@@ -11,7 +11,19 @@ export class BaselineSchema1715000000000 implements MigrationInterface {
       throw new Error(`Archivo2.sql not found at: ${filePath}`);
     }
     const sql = fs.readFileSync(filePath, 'utf8');
-    await queryRunner.query(sql);
+    const statements = sql
+      .split(/;\r?\n/)
+      .map((s) => s.replace(/^--.*$/gm, '').trim())
+      .filter((s) => s.length > 0);
+    for (const stmt of statements) {
+      const safe = stmt.replace(/\bCREATE\s+TABLE\b/gi, 'CREATE TABLE IF NOT EXISTS');
+      try {
+        await queryRunner.query(safe + ';');
+      } catch (e: any) {
+        if (e?.code === '42P07' || e?.message?.includes('already exists')) continue;
+        throw e;
+      }
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
