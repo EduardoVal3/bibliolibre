@@ -5,7 +5,7 @@ export class RecursosDigitalesDbObjects1715000000600 implements MigrationInterfa
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE TABLE prestamos_dispositivos (
+      CREATE TABLE IF NOT EXISTS prestamos_dispositivos (
           idprestamodispositivo SERIAL PRIMARY KEY,
           iddispositivo         INT NOT NULL REFERENCES dispositivos_prestados ( iddispositivo ),
           idusuario             INT NOT NULL REFERENCES usuarios ( idusuario ),

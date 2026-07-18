@@ -5,7 +5,7 @@ export class MembresiasNivelYPagos1715000001100 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      ALTER TABLE membresias ADD COLUMN nivel int NOT NULL DEFAULT 0;
+      ALTER TABLE membresias ADD COLUMN IF NOT EXISTS nivel int NOT NULL DEFAULT 0;
     `);
 
     await queryRunner.query(`
@@ -15,7 +15,7 @@ export class MembresiasNivelYPagos1715000001100 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE pagos_membresias (
+      CREATE TABLE IF NOT EXISTS pagos_membresias (
         idpagomembresia   SERIAL PRIMARY KEY,
         idusuario         INT NOT NULL REFERENCES usuarios(idusuario),
         idmembresia       INT NOT NULL REFERENCES membresias(idmembresia),
